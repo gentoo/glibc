@@ -50,3 +50,5 @@ fi
 pthread_in_libc=no
 # Hurd already provides abort implementation for the loader
 abort_in_ld=yes
+# We want ldconfig
+use_ldconfig=yes
