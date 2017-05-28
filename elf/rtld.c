@@ -99,6 +99,22 @@ uintptr_t __pointer_chk_guard_local
 strong_alias (__pointer_chk_guard_local, __pointer_chk_guard)
 #endif
 
+/* Check that AT_SECURE=0, or that the passed name does not contain
+   directories and is not overly long.  Reject empty names
+   unconditionally.  */
+static bool
+dso_name_valid_for_suid (const char *p)
+{
+  if (__glibc_unlikely (__libc_enable_secure))
+    {
+      /* Ignore pathnames with directories for AT_SECURE=1
+	 programs, and also skip overlong names.  */
+      size_t len = strlen (p);
+      if (len >= NAME_MAX || memchr (p, '/', len) != NULL)
+	return false;
+    }
+  return *p != '\0';
+}
 
 /* LD_AUDIT variable contents.  Must be processed before the
    audit_list below.  */
@@ -793,6 +809,42 @@ static const char *library_path attribute_relro;
 static const char *preloadlist attribute_relro;
 /* Nonzero if information about versions has to be printed.  */
 static int version_info attribute_relro;
+
+/* The LD_PRELOAD environment variable gives list of libraries
+   separated by white space or colons that are loaded before the
+   executable's dependencies and prepended to the global scope list.
+   (If the binary is running setuid all elements containing a '/' are
+   ignored since it is insecure.)  Return the number of preloads
+   performed.  */
+unsigned int
+handle_ld_preload (const char *preloadlist, struct link_map *main_map)
+{
+  unsigned int npreloads = 0;
+  const char *p = preloadlist;
+  char fname[PATH_MAX];
+
+  while (*p != '\0')
+    {
+      /* Split preload list at space/colon.  */
+      size_t len = strcspn (p, " :");
+      if (len > 0 && len < PATH_MAX)
+	{
+	  memcpy (fname, p, len);
+	  fname[len] = '\0';
+	}
+      else
+	fname[0] = '\0';
+
+      /* Skip over the substring and the following delimiter.  */
+      p += len;
+      if (*p == ' ' || *p == ':')
+	++p;
+
+      if (dso_name_valid_for_suid (fname))
+	npreloads += do_preload (fname, main_map, "LD_PRELOAD");
+    }
+  return npreloads;
+}
 
 static void
 dl_main (const ElfW(Phdr) *phdr,
@@ -1544,23 +1596,8 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 
   if (__glibc_unlikely (preloadlist != NULL))
     {
-      /* The LD_PRELOAD environment variable gives list of libraries
-	 separated by white space or colons that are loaded before the
-	 executable's dependencies and prepended to the global scope
-	 list.  If the binary is running setuid all elements
-	 containing a '/' are ignored since it is insecure.  */
-      char *list = strdupa (preloadlist);
-      char *p;
-
       HP_TIMING_NOW (start);
-
-      /* Prevent optimizing strsep.  Speed is not important here.  */
-      while ((p = (strsep) (&list, " :")) != NULL)
-	if (p[0] != '\0'
-	    && (__builtin_expect (! __libc_enable_secure, 1)
-		|| strchr (p, '/') == NULL))
-	  npreloads += do_preload (p, main_map, "LD_PRELOAD");
-
+      npreloads += handle_ld_preload (preloadlist, main_map);
       HP_TIMING_NOW (stop);
       HP_TIMING_DIFF (diff, start, stop);
       HP_TIMING_ACCUM_NT (load_time, diff);
