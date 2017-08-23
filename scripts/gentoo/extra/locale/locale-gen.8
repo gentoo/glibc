@@ -1,0 +1,69 @@
+.TH "locale-gen" "8" "Aug 2007" "Gentoo"
+.SH "NAME"
+locale\-gen \- generate locales on the fly
+.SH "DESCRIPTION"
+The locale\-gen utility is used to manage locales on your system.  Often times
+it merely generates a user configurable list of locales, but it can be used to
+generate a few locales on the fly as needed.
+
+Normally all locales would be generated at build time, but this leads to waste
+of disk and time as many users really just want a handful on their system.
+.SH "OPTIONS"
+.TP
+\fB\-a\fR, \fB\-\-ask\fR
+Ask before generating each locale
+.TP
+\fB\-A\fR, \fB\-\-all\fR
+Generate all possible locales
+.TP
+\fB\-c\fR, \fB\-\-config\fR \fI<config>\fR
+Use specified \fIconfig\fR file rather than default /etc/locale.gen
+.TP
+\fB\-d\fR, \fB\-\-destdir\fR \fI<dir>\fR
+Look for locale definitions and store generated locale data in the specified
+\fIdirectory\fR
+.TP
+\fB\-G\fR, \fB\-\-generate\fR \fI<locale>\fR
+Only generate the specified \fIlocale\fR (implies \-\-keep \-\-update);
+format of \fIlocale\fR matches a single line in the \fBlocale.gen\fR(5)
+config file
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Show the help output (imagine that)
+.TP
+\fB\-j\fR, \fB\-\-jobs\fR \fI<num>\fR
+Generate the specified \fInumber\fR of locales in parallel
+.TP
+\fB\-k\fR, \fB\-\-keep\fR
+Keep all existing locales even if they are not in the config file
+.TP
+\fB\-l\fR, \fB\-\-list\fR
+List all the locales that we think should exist according to the config
+.TP
+\fB\-q\fR, \fB\-\-quiet\fR
+Only spit out errors
+.TP
+\fB\-u\fR, \fB\-\-update\fR
+Only generate locales that do not already exist (normally existing locales are regenerated)
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Report the program version
+.TP
+\fB\-\-\fR
+To pass custom options directly to the \fBlocaledef\fR utility, end the
+\fBlocale\-gen\fR option list with \-\- and then everything after that will be
+passed on through unmolested (the options \-c are passed by default)
+.SH "AUTHORS"
+.fi
+Mike Frysinger <vapier@gentoo.org>
+.nf
+.SH "REPORTING BUGS"
+Please report bugs via http://bugs.gentoo.org/
+.SH "FILES"
+\fB/etc/locale.gen\fR \- locale list
+.SH "SEE ALSO"
+.BR locale (1),
+.BR localedef (1),
+.BR locale (5),
+.BR locale.gen (5),
+.BR locale (7)
