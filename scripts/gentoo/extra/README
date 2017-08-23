@@ -1,0 +1,8 @@
+What is all this garbage you may wonder.
+
+c_stubs/ (pulled from glibc-fedora-20060501T0751.tar.bz2)
+	read c_stubs/README
+
+locale/
+	a port/rewrite of Debian's locale-gen.  see the man pages in the
+	subdir for more information.
