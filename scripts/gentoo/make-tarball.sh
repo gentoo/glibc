@@ -69,8 +69,9 @@ cp scripts/gentoo/README.Gentoo.patches tmp/ || exit 1
 
 git format-patch glibc-${PV}..HEAD > /dev/null
 
-# remove all patches where the summary line starts with [no-tarball]
+# remove all patches where the summary line starts with [no-tarball] or [no-patch]
 rm -f 00??-no-tarball-*.patch
+rm -f 00??-no-patch-*.patch
 
 for myname in 00*.patch ; do
 	mv ${myname} tmp/patches/$(echo ${myname}|sed -e 's:^\(....\)-:\1_all_:') || exit 1
