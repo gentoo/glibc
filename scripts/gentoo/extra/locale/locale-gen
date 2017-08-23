@@ -1,0 +1,446 @@
+#!/bin/bash
+
+#
+# Based upon Debian's locale-gen, fetched from glibc_2.3.6-7.diff.gz
+#
+
+unset POSIXLY_CORRECT IFS
+umask 0022
+
+argv0=${0##*/}
+
+EPREFIX="@GENTOO_PORTAGE_EPREFIX@"
+if [[ ${EPREFIX} == "@"GENTOO_PORTAGE_EPREFIX"@" ]] ; then
+	EPREFIX=""
+fi
+
+FUNCTIONS_SH="/lib/gentoo/functions.sh"
+source "${EPREFIX}"${FUNCTIONS_SH} || {
+	echo "${argv0}: Could not source ${FUNCTIONS_SH}!" 1>&2
+	exit 1
+}
+
+COMPILED_LOCALES=""
+
+show_usage() {
+	cat <<-EOF
+	Usage: ${HILITE}${argv0}${NORMAL} ${GOOD}[options]${NORMAL} -- ${GOOD}[localedef options]${NORMAL}
+
+	Generate locales based upon the config file /etc/locale.gen.
+
+	${HILITE}Options:${NORMAL}
+	    ${GOOD}-k, --keep${NORMAL}               Don't nuke existing locales
+	    ${GOOD}-d, --destdir <dir>${NORMAL}      Use locale data in specified DESTDIR tree
+	    ${GOOD}-c, --config <config>${NORMAL}    Use specified config instead of default locale.gen
+	    ${GOOD}-l, --list${NORMAL}               List all the locales to be generated
+	    ${GOOD}-a, --ask${NORMAL}                Ask before generating each locale
+	    ${GOOD}-A, --all${NORMAL}                Pretend the locale list contains all locales
+	    ${GOOD}-u, --update${NORMAL}             Only generate locales that are missing
+	    ${GOOD}-G, --generate <locale>${NORMAL}  Generate specified locale (one shot; implies -k -u)
+	    ${GOOD}-j, --jobs <num>${NORMAL}         Number of locales to generate at a time (parallel)
+	    ${GOOD}-q, --quiet${NORMAL}              Only show errors
+	    ${GOOD}-V, --version${NORMAL}            Meaningless version information
+	    ${GOOD}-h, --help${NORMAL}               Show this help cruft
+
+	${HILITE}Localedef Options:${NORMAL}
+	    By default, ${GOOD}${LOCALEDEF_OPTS}${NORMAL} is passed to localedef.
+
+	For more info, see the ${HILITE}locale-gen${NORMAL}(1) and ${HILITE}locale.gen${NORMAL}(8) manpages.
+	EOF
+	[[ $# -eq 0 ]] && exit 0
+	echo ""
+	eerror "Unknown option '$1'"
+	exit 1
+}
+show_version() {
+	local b="(" a=")"
+	local cvsver="$Revision: 1.42 $b $Date: 2017/08/12 16:30:06 $a"
+	echo "locale-gen-${cvsver//: }"
+	exit 0
+}
+
+
+
+LOCALEDEF_OPTS=""
+KEEP=""
+DESTDIR=""
+CONFIG=""
+JUST_LIST=""
+ASK=""
+ALL=""
+UPDATE=""
+GENERATE=""
+JOBS_MAX=""
+QUIET=0
+SET_X=""
+LOCALE_ARCHIVE=true
+CUTF_ADDED=""
+INPLACE_GLIBC=""
+while [[ $# -gt 0 ]] ; do
+	case $1 in
+		--inplace-glibc)           INPLACE_GLIBC=$1;;
+		-k|--keep|--keep-existing) KEEP=$1;;
+		-d|--destdir)              shift; DESTDIR=$1; unset ROOT;;
+		-c|--config)               shift; CONFIG=$1;;
+		-l|--list)                 JUST_LIST=$1;;
+		-a|--ask)                  ASK=$1;;
+		-A|--all)                  ALL=$1;;
+		-u|--update)               UPDATE=$1;;
+		-G|--generate)             shift; GENERATE=$1;;
+		-j|--jobs)                 shift; JOBS_MAX=$(( $1 ));;
+		-j*)                       : $(( JOBS_MAX = ${1#-j} ));;
+		-q|--quiet)                : $(( ++QUIET ));;
+		-x|--debug)                SET_X="true";;
+		-V|--version)              show_version;;
+		-h|--help)                 show_usage;;
+		--)                        shift; LOCALEDEF_OPTS=$*; break;;
+		*)                         show_usage $1;;
+	esac
+	shift
+done
+
+if [[ -n ${COMPILED_LOCALES} ]] ; then
+	ewarn "All locales have been installed and registered by the package manager. If you"
+	ewarn "rebuild the locale archive now, file integrity tools may show it as corrupted."
+	ewarn "This is not really a big problem, but a better solution is to disable"
+	ewarn "USE=compile-locales and re-install glibc if you dont need all locales."
+	echo
+fi
+
+if [[ -z ${JOBS_MAX} ]] ; then
+	JOBS_MAX=$(getconf _NPROCESSORS_ONLN 2>/dev/null)
+	: ${JOBS_MAX:=1}
+fi
+[[ ${JOBS_MAX} -lt 1 ]] && JOBS_MAX=1
+[[ -n ${SET_X} ]] && set -x
+: ${KEEP:=${JUST_LIST}}
+[[ -n ${GENERATE} ]] && UPDATE="true" && KEEP="true"
+
+: ${ROOT:=/}
+ROOT="${ROOT%/}/"
+if [[ -n ${DESTDIR} ]] && [[ ${ROOT} != "/" ]] ; then
+	eerror "DESTDIR and ROOT are mutually exclusive options"
+	exit 1
+fi
+: ${EROOT:="${ROOT%/}${EPREFIX}/"}
+EROOT="${EROOT%/}/"
+if [[ ${EROOT} != "/" ]] ; then
+	einfo "Using locale.gen from ROOT ${EROOT}etc/"
+fi
+if [[ -n ${DESTDIR} ]] ; then
+	DESTDIR="${DESTDIR%/}/"
+	einfo "Building locales in DESTDIR '${DESTDIR}'"
+else
+	DESTDIR=${EROOT}
+fi
+
+# XXX: should fix this ...
+if [[ ${ROOT} != "/" ]] ; then
+	eerror "Sorry, but ROOT support is incomplete at this time."
+	exit 0
+fi
+
+: ${CONFIG:=${EROOT}etc/locale.gen}
+LOCALES=${DESTDIR}usr/share/i18n/locales
+CHARMAPS=${DESTDIR}usr/share/i18n/charmaps
+SUPPORTED=${DESTDIR}usr/share/i18n/SUPPORTED
+ALIAS=${DESTDIR}usr/share/locale/locale.alias
+
+#
+# Grab any user options in their config file
+options=$(sed -n \
+	-e '/^[[:space:]]*#%/s:^[[:space:]]*#%[[:space:]]*::p'\
+	"${CONFIG}" 2>/dev/null
+)
+IFS=$'\n'
+for option in ${options} ; do
+	case ${option} in
+		no-locale-archive)
+			LOCALE_ARCHIVE=false
+			;;
+		*)
+			ewarn "Unrecognized option '${option}'"
+			;;
+	esac
+done
+unset IFS
+
+[[ -n ${ALL} ]] && CONFIG=${SUPPORTED}
+
+# Extract the location of the locale dir on the fly as `localedef --help` has:
+#                        locale path    : /usr/lib64/locale:/usr/share/i18n
+# For long paths, the line may get wrapped into two, in which case space (' ') is replaced
+# by newline (\n).
+LOCALEDIR=$(LC_ALL="C" "${DESTDIR}"usr/bin/localedef --help | sed -n -r '/locale path/{N;s|.*:[ \n](.*):/.*|\1|;p}')
+LOCALEDIR="${DESTDIR}${LOCALEDIR#${EPREFIX}}"
+if [[ $? -ne 0 ]] || [[ -z ${LOCALEDIR} ]] || [[ ${LOCALEDIR} != ${DESTDIR}/usr/lib*/locale ]] ; then
+	eerror "Unable to parse the output of your localedef utility." 1>&2
+	eerror "File a bug about this issue and include the output of 'localedef --help'." 1>&2
+	exit 1
+fi
+
+# Only generate locales the user specified before falling back to the config.
+locales_to_generate=${GENERATE}
+
+if [[ -z ${locales_to_generate} ]] && [[ -e ${CONFIG} ]] ; then
+	locales_to_generate=$(sed \
+		-e 's:#.*::' \
+		-e '/^[[:space:]]*$/d' \
+		"${CONFIG}" | sort)
+	# Sanity check to make sure people did not duplicate entries. #550884
+	# The first column must be unique specifically. #235555
+	dup_locales_to_generate=$(
+		echo "${locales_to_generate}" | \
+			awk '{ if ($1 == last) { print lastline; print; } else { lastline = $0; last = $1; } }')
+	if [[ -n ${dup_locales_to_generate} ]] ; then
+		ewarn "These locales have been duplicated in your config:\n${dup_locales_to_generate}"
+		ewarn "Some might be filtered, but you must fix it."
+		locales_to_generate=$(echo "${locales_to_generate}" | uniq)
+	fi
+
+	if echo ${locales_to_generate} | grep -vq 'C.UTF-8' ; then
+		if [[ -z  ${locales_to_generate} ]] ; then
+			locales_to_generate='C.UTF-8 UTF-8'
+		else
+			locales_to_generate=$(echo "${locales_to_generate}" ; echo -n 'C.UTF-8 UTF-8')
+		fi
+		CUTF_ADDED="true"
+	fi
+fi
+
+if [[ -z ${locales_to_generate} ]] ; then
+	[[ ${QUIET} -eq 0 ]] && [[ -z ${JUST_LIST} ]] && \
+		ewarn "No locales found, keeping locale archive"
+	exit 0
+fi
+
+if [[ ${locales_to_generate} == "C.UTF-8 UTF-8" ]] && [[ -n ${CUTF_ADDED} ]] ; then
+	[[ ${QUIET} -eq 0 ]] && [[ -z ${JUST_LIST} ]] && \
+		ewarn "No locales found, keeping locale archive"
+	exit 0
+fi
+
+mkdir -p "${LOCALEDIR}"
+if [[ -z ${KEEP} && -z ${UPDATE} ]] ; then
+	# Remove all old locale dir and locale-archive before generating new
+	# locale data.  Scrubbing via update is done elsewhere.
+	rm -rf "${LOCALEDIR}"/* &> /dev/null || true
+fi
+
+# Transform the name in locales.gen to the name used when storing
+# the locale data in /usr/lib/locale/ ... this normalize algo is
+# taken out of the glibc localedef source code ...
+normalize() {
+	if [[ $1 == *.* ]] ; then
+		local ret=$(echo ${1##*.} | tr '[[:upper:]]' '[[:lower:]]')
+		echo ${1%%.*}.${ret//-}
+	else
+		echo $1
+	fi
+}
+
+# These funky sed's are based on the stuff in glibc's localedata/Makefile
+# Basically we want to rewrite the display like so:
+# <locale without a . or @>.<charmap>[@extra stuff after the @ in the locale]
+# en_US       ISO-8859-1  -> en_US.ISO-8859-1
+# en_US.UTF-8 UTF-8       -> en_US.UTF-8
+# de_DE@euro  ISO-8859-15 -> de_DE.ISO-8859-15@euro
+locales_disp=$(echo "${locales_to_generate}" | sed \
+	-e '   /@/   s:[[:space:]]*\([^@[:space:]]*\)\([^[:space:]]*\)[[:space:]]\+\([^[:space:]]*\):\1.\3\2:' \
+	-e '/^[^@]*$/s:[[:space:]]*\([^.[:space:]]*\)\([^[:space:]]*\)[[:space:]]\+\([^[:space:]]*\):\1.\3:')
+
+eval declare -a locales_disp=(${locales_disp})
+eval declare -a locales_to_generate=(${locales_to_generate})
+total=$(( ${#locales_to_generate[*]} / 2 ))
+
+[[ ${QUIET} -eq 0 ]] && [[ -z ${JUST_LIST} ]] && \
+einfo "Generating ${total} locales (this might take a while) with ${JOBS_MAX} jobs"
+
+if [[ -n ${UPDATE} ]] ; then
+	# normalize newlines into spaces
+	existing_locales=" $(echo $(locale -a 2>/dev/null)) "
+fi
+
+generate_locale() {
+	local output=""
+
+	if [[ -z ${ASK} ]] && [[ ${QUIET} -eq 0 ]] ; then
+		output=" (${cnt_fmt}/${total}) Generating ${disp}"
+	fi
+
+	if [[ $(( JOB_IDX_E - JOB_IDX_S )) == ${JOBS_MAX} ]] ; then
+		wait ${JOB_PIDS[$(( JOB_IDX_S++ ))]}
+		JOB_RETS+=( $? )
+	fi
+	(
+		# Accumulate all the output in one go so the parallel
+		# jobs don't tromp on each other
+		x=$(
+			[[ -n ${output} ]] && ebegin "${output}"
+			# In most cases, localedef can just use the system glibc.
+			# However, if we are within a major glibc upgrade, this may fail
+			# in src_* phases since the new localedef links against the new
+			# glibc, but the new glibc is not installed yet...
+			if [[ -z ${INPLACE_GLIBC} ]] ; then
+				"${DESTDIR}"usr/bin/localedef ${LOCALEDEF_OPTS} \
+					--no-archive \
+					-i "${input}" \
+					-f "${charmap}" \
+					-A "${ALIAS}" \
+					--prefix "${DESTDIR%${EPREFIX}/}/" \
+					"${locale}" 2>&1
+			else
+				# We assume that the current directory is "${ED}"/$(get_libdir),
+				# see the glibc ebuild, function glibc_sanity_check(), for why.
+				LC_ALL=C ./ld-*.so --library-path . \
+					"${DESTDIR}"usr/bin/localedef ${LOCALEDEF_OPTS} \
+					--no-archive \
+					-i "${input}" \
+					-f "${charmap}" \
+					-A "${ALIAS}" \
+					--prefix "${DESTDIR%${EPREFIX}/}/" \
+					"${locale}" 2>&1
+			fi
+			ret=$?
+			[[ -n ${output} ]] && eend ${ret}
+			exit ${ret}
+		)
+		ret=$?
+		if [[ -n ${output} ]] ; then
+			echo "${x}"
+		elif [[ ${ret} -ne 0 ]] ; then
+			eerror "${disp}: ${x}"
+		fi
+		exit ${ret}
+	) &
+	JOB_PIDS+=( $! )
+	: $(( ++JOB_IDX_E ))
+
+	if [[ ${ret} != 0 && ${locale} == */* ]] ; then
+		ewarn "Perhaps you meant to use a space instead of a / in your config file ?"
+	fi
+}
+
+JOB_PIDS=()
+JOB_RETS=()
+JOB_IDX_S=0
+JOB_IDX_E=0
+cnt=0
+lidx=0
+while [[ -n ${locales_to_generate[${lidx}]} ]] ; do
+	: $(( ++cnt ))
+	locale=${locales_to_generate[$((lidx++))]}
+	charmap=${locales_to_generate[$((lidx++))]}
+
+	# XXX: if we wanted to, we could check existence of
+	#      ${LOCALES}/${locale} and ${CHARMAPS}/${charmap}
+	#      this would fail for things like "en_US.UTF8", but
+	#      in that case we could fall back to checking the
+	#      SUPPORTED file ... then again, the localedef
+	#      below will abort nicely for us ...
+	if [[ -z ${locale} || -z ${charmap} ]] ; then
+		eerror "Bad entry in locale.gen: '${locale} ${charmap}'; skipping"
+		continue
+	fi
+
+	disp=${locales_disp[$(( cnt - 1 ))]}
+
+	if [[ -n ${UPDATE} ]] ; then
+		normalized_locale=$(normalize ${locale})
+		if [[ ${existing_locales} == *" ${normalized_locale} "* ]] ; then
+			existing_locales=${existing_locales/ ${normalized_locale} / }
+			if [[ ${QUIET} -eq 0 ]] ; then
+				cnt_fmt=$(printf "%${#total}i" ${cnt})
+				einfo " (${cnt_fmt}/${total}) Skipping ${disp}"
+			fi
+			continue
+		fi
+	fi
+
+	# If the locale is like 'en_US.UTF8', then we really want 'en_US'
+	if [[ -f ${LOCALES}/${locale} ]] ; then
+		input=${locale}
+	else
+		input=${locale%%.*}
+	fi
+
+	if [[ -z ${JUST_LIST} ]] ; then
+		# Format the output for the question/status
+		cnt_fmt=$(printf "%${#total}i" ${cnt})
+		if [[ -n ${ASK} ]] ; then
+			einfon " (${cnt_fmt}/${total}) Generate ${disp} ? (Y/n) "
+			read user_answer
+			[[ ${user_answer} == [nN]* ]] && continue
+		fi
+		generate_locale
+	else
+		echo "${disp}"
+	fi
+done
+
+for (( i = JOB_IDX_S; i < JOB_IDX_E; ++i )) ; do
+	wait ${JOB_PIDS[i]}
+	JOB_RETS+=( $? )
+done
+ret=$(( 0 ${JOB_RETS[@]/#/+} ))
+
+[[ ${QUIET} -eq 0 ]] && [[ -z ${JUST_LIST} ]] && \
+einfo "Generation complete"
+
+if ${LOCALE_ARCHIVE} && [[ -z ${JUST_LIST} ]] ; then
+	ebegin "Adding locales to archive"
+	# The pattern ends with / on purpose: we don't care about files (like
+	# locale-archive) in the locale subdir, and we definitely don't want to
+	# delete them!
+	for LOC in "${LOCALEDIR}"/*/; do 
+		LOC=${LOC%/} # Strip trailing /, since localedef doesn't like it
+		x=$(
+			# In most cases, localedef can just use the system glibc.
+			# However, if we are within a major glibc upgrade, this may fail
+			# in src_* phases since the new localedef links against the new
+			# glibc, but the new glibc is not installed yet...
+			if [[ -z ${INPLACE_GLIBC} ]] ; then
+				"${DESTDIR}"usr/bin/localedef \
+					--add-to-archive "${LOC}" \
+					--replace \
+					--prefix "${DESTDIR%${EPREFIX}/}/"
+			else
+				# We assume that the current directory is "${ED}"/$(get_libdir),
+				# see the glibc ebuild, function glibc_sanity_check(), for why.
+				LC_ALL=C ./ld-*.so --library-path . \
+					"${DESTDIR}"usr/bin/localedef \
+					--add-to-archive "${LOC}" \
+					--replace \
+					--prefix "${DESTDIR%${EPREFIX}/}/"
+			fi
+			ret=$?
+			if [[ -n ${output} ]] ; then
+				echo "${x}"
+			elif [[ ${ret} -ne 0 ]] ; then
+				eerror "${disp}: ${x}"
+			fi
+			if [[ $ret -eq 0 ]]; then
+				rm -r "${LOC}"
+			fi
+			exit ${ret}
+		)
+	done
+	eend $ret
+fi
+
+# Remove locales that existed but were not requested
+if [[ -n ${UPDATE} ]] && [[ -z ${JUST_LIST} ]] ; then
+	# Ignore these pseudo locales
+	existing_locales=${existing_locales/ C / }
+	existing_locales=${existing_locales/ POSIX / }
+	if [[ -n ${existing_locales// } ]] ; then
+		if [[ -z ${KEEP} ]] ; then
+			[[ ${QUIET} -eq 0 ]] && einfo "Scrubbing old locales:"${existing_locales}
+			cd "${LOCALEDIR}" && rm -rf ${existing_locales}
+		else
+			[[ ${QUIET} -eq 0 ]] && einfo "Keeping old locales:"${existing_locales}
+		fi
+	fi
+fi
+
+exit ${ret}
