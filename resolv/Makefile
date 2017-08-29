@@ -49,7 +49,6 @@ tests += \
   tst-ns_name_pton \
   tst-res_hconf_reorder \
   tst-res_hnok \
-  tst-res_use_inet6 \
   tst-resolv-basic \
   tst-resolv-binary \
   tst-resolv-edns \
