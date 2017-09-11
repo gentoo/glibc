@@ -46,7 +46,7 @@ sysdep_headers += sys/mount.h sys/acct.h sys/sysctl.h \
 		  bits/msq-pad.h bits/sem-pad.h bits/shmlba.h bits/shm-pad.h
 
 tests += tst-clone tst-clone2 tst-clone3 tst-fanotify tst-personality \
-	 tst-quota tst-sync_file_range tst-sysconf-iov_max tst-ttyname \
+	 tst-quota tst-sync_file_range tst-sysconf-iov_max \
 	 test-errno-linux tst-memfd_create tst-mlock2 tst-pkey \
 	 tst-rlimit-infinity tst-ofdlocks
 tests-internal += tst-ofdlocks-compat
