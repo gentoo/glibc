@@ -68,7 +68,7 @@ routines :=								      \
 	streams-compat
 
 aux		:= init-posix environ
-tests		:= test-errno tstgetopt testfnm runtests runptests \
+tests		:= tstgetopt testfnm runtests runptests \
 		   tst-preadwrite tst-preadwrite64 test-vfork regexbug1 \
 		   tst-mmap tst-mmap-offset tst-getaddrinfo tst-truncate \
 		   tst-truncate64 tst-fork tst-fnmatch tst-regexloc tst-dir \
@@ -89,7 +89,7 @@ tests		:= test-errno tstgetopt testfnm runtests runptests \
 		   tst-execve1 tst-execve2 tst-execle1 tst-execle2 \
 		   tst-execvp3 tst-execvp4 \
 		   tst-execvpe1 tst-execvpe2 tst-execvpe3 tst-execvpe4 \
-		   tst-execvpe5 tst-execvpe6 \
+		   tst-execvpe6 \
 		   tst-getaddrinfo3 tst-fnmatch2 tst-cpucount tst-cpuset \
 		   bug-getopt1 bug-getopt2 bug-getopt3 bug-getopt4 \
 		   bug-getopt5 tst-getopt_long1 bug-regex34 bug-regex35 \
