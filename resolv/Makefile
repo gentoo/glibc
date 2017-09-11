@@ -61,11 +61,6 @@ ifeq (yes,$(build-shared))
 tests += \
   tst-resolv-canonname \
 
-# uses DEPRECATED_RES_USE_INET6 from <resolv-internal.h>.
-tests-internal += \
-  tst-resolv-res_init \
-  tst-resolv-res_init-thread \
-
 # Needs resolv_context.
 tests-internal += \
   tst-resolv-res_ninit \
