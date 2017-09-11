@@ -282,7 +282,7 @@ tests = tst-attr2 tst-attr3 tst-default-attr \
 	tst-atfork1 \
 	tst-cancel1 tst-cancel2 tst-cancel3 tst-cancel4 tst-cancel4_1 \
 	tst-cancel4_2 tst-cancel5 \
-	tst-cancel6 tst-cancel7 tst-cancel8 tst-cancel9 tst-cancel10 \
+	tst-cancel6 tst-cancel8 tst-cancel9 tst-cancel10 \
 	tst-cancel11 tst-cancel12 tst-cancel13 tst-cancel14 tst-cancel15 \
 	tst-cancel16 tst-cancel17 tst-cancel18 tst-cancel19 tst-cancel20 \
 	tst-cancel21 tst-cancel22 tst-cancel23 tst-cancel24 \
@@ -319,6 +319,9 @@ tests = tst-attr2 tst-attr3 tst-default-attr \
 	tst-robust-fork tst-create-detached tst-memstream \
 	tst-thread-exit-clobber tst-minstack-cancel tst-minstack-exit \
 	tst-minstack-throw \
+	tst-cnd-basic tst-mtx-trylock tst-cnd-broadcast \
+	tst-cnd-timedwait tst-thrd-detach tst-mtx-basic tst-thrd-sleep \
+	tst-mtx-recursive tst-call-once tst-mtx-timedlock \
 	tst-rwlock-pwn \
 	tst-unwind-thread
 
@@ -384,7 +387,7 @@ CFLAGS-tst-cleanup2.c += -fno-builtin
 CFLAGS-tst-cleanupx2.c += -fno-builtin
 
 tests += tst-cancelx2 tst-cancelx3 tst-cancelx4 tst-cancelx5 \
-	 tst-cancelx6 tst-cancelx7 tst-cancelx8 tst-cancelx9 tst-cancelx10 \
+	 tst-cancelx6 tst-cancelx8 tst-cancelx9 tst-cancelx10 \
 	 tst-cancelx11 tst-cancelx12 tst-cancelx13 tst-cancelx14 tst-cancelx15 \
 	 tst-cancelx16 tst-cancelx17 tst-cancelx18 tst-cancelx20 tst-cancelx21 \
 	 tst-cleanupx0 tst-cleanupx1 tst-cleanupx2 tst-cleanupx3 tst-cleanupx4
