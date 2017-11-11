@@ -47,7 +47,6 @@ tests += \
   tst-ns_name \
   tst-ns_name_compress \
   tst-res_hconf_reorder \
-  tst-res_use_inet6 \
   tst-resolv-basic \
   tst-resolv-edns \
   tst-resolv-network \
