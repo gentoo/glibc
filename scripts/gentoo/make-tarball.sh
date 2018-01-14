@@ -12,7 +12,7 @@ fi
 
 # check that we're in the root of a glibc git repo
 
-if [[ ! -f ChangeLog.old-ports-hppa ]] || [[ ! -d .git ]] ; then
+if [[ ! -f libc-abis ]] || [[ ! -d .git ]] ; then
 	echo "Error: You need to call this script in the main directory of a Gentoo glibc git clone"
 	exit 1
 fi
@@ -67,15 +67,24 @@ cp scripts/gentoo/README.Gentoo.patches tmp/ || exit 1
 
 # create and rename patches
 
-git format-patch glibc-${PV}..HEAD > /dev/null
+if [[ "${PV}" == "9999" ]]; then
+	# we're working with master, start from upstream master
+	startpoint="master"
+else
+	# release branch, start from upstream release tag
+	startpoint="glibc-${PV}"
+fi
+
+git format-patch ${startpoint}..HEAD > /dev/null
 
 # remove all patches where the summary line starts with [no-tarball] or [no-patch]
+
 rm -f 0???-no-tarball-*.patch
 rm -f 0???-no-patch-*.patch
 
-for myname in 0*.patch ; do
-	mv ${myname} tmp/patches/$(echo ${myname}|sed -e 's:^\(....\)-:\1_all_:') || exit 1
-done
+# move patches into temporary directory
+
+mv 0*.patch tmp/patches/ || exit 1
 
 # copy support files
 
@@ -83,7 +92,7 @@ cp -r scripts/gentoo/extra tmp/ || exit 1
 
 # add a history file
 
-git log --stat --decorate glibc-${PV}..HEAD > tmp/patches/README.history || exit 1
+git log --stat --decorate ${startpoint}..HEAD > tmp/patches/README.history || exit 1
 
 # package everything up
 
