@@ -61,7 +61,6 @@ xtests			= bug-erange
 # Tests which need libdl
 ifeq (yes,$(build-shared))
 tests += tst-nss-files-hosts-erange
-tests += tst-nss-files-hosts-multi
 endif
 
 # If we have a thread library then we can test cancellation against
