@@ -63,7 +63,6 @@ xtests			= bug-erange
 # Tests which need libdl
 ifeq (yes,$(build-shared))
 tests += tst-nss-files-hosts-erange
-tests += tst-nss-files-hosts-multi
 tests += tst-nss-files-hosts-getent
 endif
 
