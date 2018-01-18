@@ -33,6 +33,7 @@ tests := mallocbug tst-malloc tst-valloc tst-calloc tst-obstack \
 	 tst-mallocfork2 \
 	 tst-interpose-nothread \
 	 tst-interpose-thread \
+	 tst-malloc-too-large \
 
 tests-static := \
 	 tst-interpose-static-nothread \
