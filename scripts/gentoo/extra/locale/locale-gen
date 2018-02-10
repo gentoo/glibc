@@ -193,7 +193,7 @@ mkdir -p "${LOCALEDIR}"
 if [[ -z ${KEEP} && -z ${UPDATE} ]] ; then
 	# Remove all old locale dir and locale-archive before generating new
 	# locale data.  Scrubbing via update is done elsewhere.
-	rm -rf "${LOCALEDIR}"/* || true
+	rm -rf "${LOCALEDIR}"/* &> /dev/null || true
 fi
 
 # Transform the name in locales.gen to the name used when storing
