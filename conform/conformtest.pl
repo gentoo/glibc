@@ -132,7 +132,7 @@ sub compiletest
     ++$skipped;
     printf (" SKIP\n");
   } else {
-    $ret = system "$CC $CFLAGS -c $fnamebase.c -o $fnamebase.o > $fnamebase.out 2>&1";
+    $ret = system "$CC $CFLAGS -O0 -c $fnamebase.c -o $fnamebase.o > $fnamebase.out 2>&1";
     if ($ret != 0) {
       if ($optional != 0) {
 	printf (" $errmsg\n");
@@ -270,7 +270,9 @@ sub checknamespace {
   close (TESTFILE);
 
   undef %errors;
-  open (CONTENT, "$CC $CFLAGS_namespace -E $fnamebase.c -P -Wp,-dN | sed -e '/^# [1-9]/d' -e '/^[[:space:]]*\$/d' |");
+  # -O0 to negate effect of possible -O<N> passed to $CC
+  # See https://bugs.gentoo.org/659030#c6
+  open (CONTENT, "$CC -O0 $CFLAGS_namespace -E $fnamebase.c -P -Wp,-dN | sed -e '/^# [1-9]/d' -e '/^[[:space:]]*\$/d' |");
   loop: while (<CONTENT>) {
     chop;
     if (/^#define (.*)/) {
