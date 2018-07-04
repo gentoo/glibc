@@ -162,7 +162,8 @@ foreach my $sym (@sym_data) {
 # detected by this script if the same namespace issue applies for
 # static linking.
 
-@c_syms = list_exported_functions ("$CC $flags", $standard, $header, $tmpdir);
+# -O0 avoid failures like '[initial] ptsname_r -> [libc.a(ptsname.o)] ptsname'
+@c_syms = list_exported_functions ("$CC $flags -O0", $standard, $header, $tmpdir);
 $cincfile = "$tmpdir/undef-$$.c";
 $cincfile_o = "$tmpdir/undef-$$.o";
 $cincfile_sym = "$tmpdir/undef-$$.sym";
