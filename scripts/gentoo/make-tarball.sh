@@ -42,14 +42,14 @@ if [[ ! -z "${mytaginfo}" ]] ; then
 	exit 1
 fi
 
-# luckily glibc git has no /tmp dir and no tar.bz2 files, but let's better check and be pathologically careful
+# luckily glibc git has no /tmp dir and no tar.xz files, but let's better check and be pathologically careful
 
-if [[ -e tmp ]] || [[ -e ${PN}-${PV}-patches-${pver}.tar.bz2 ]] ; then
-	echo "Error: tmp or ${PN}-${PV}-patches-${pver}.tar.bz2 exists in git"
+if [[ -e tmp ]] || [[ -e ${PN}-${PV}-patches-${pver}.tar.xz ]] ; then
+	echo "Error: tmp or ${PN}-${PV}-patches-${pver}.tar.xz exists in git"
 	exit 1
 fi
 rm -rf tmp
-rm -f ${PN}-${PV}-*.tar.bz2
+rm -f ${PN}-${PV}-*.tar.xz
 
 for myname in 0*.patch ; do
 	if [[ -e ${myname} ]]; then
@@ -96,11 +96,11 @@ git log --stat --decorate ${startpoint}..HEAD > tmp/patches/README.history || ex
 
 # package everything up
 
-tar -jcf ${PN}-${PV}-patches-${pver}.tar.bz2 \
+tar -Jcf ${PN}-${PV}-patches-${pver}.tar.xz \
 	-C tmp patches extra README.Gentoo.patches || exit 1
 rm -r tmp
 
-du -b *.tar.bz2
+du -b *.tar.xz
 
 # tag the commit
 
