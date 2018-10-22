@@ -47,7 +47,7 @@ internal_setent (FILE **stream)
 
   if (*stream == NULL)
     {
-      *stream = fopen ("/etc/aliases", "rce");
+      *stream = fopen ("/etc/mail/aliases", "rce");
 
       if (*stream == NULL)
 	status = errno == EAGAIN ? NSS_STATUS_TRYAGAIN : NSS_STATUS_UNAVAIL;
