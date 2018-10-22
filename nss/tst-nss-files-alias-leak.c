@@ -45,27 +45,27 @@ prepare (int argc, char **argv)
   chroot_env = support_chroot_create
     ((struct support_chroot_configuration) { } );
 
-  char *path = xasprintf ("%s/etc/aliases", chroot_env->path_chroot);
+  char *path = xasprintf ("%s/etc/mail/aliases", chroot_env->path_chroot);
   add_temp_file (path);
   support_write_file_string
     (path,
-     "user1: :include:/etc/aliases.user1\n"
-     "user2: :include:/etc/aliases.user2\n"
-     "comment: comment1, :include:/etc/aliases.comment\n"
-     "many: :include:/etc/aliases.many\n");
+     "user1: :include:/etc/mail/aliases.user1\n"
+     "user2: :include:/etc/mail/aliases.user2\n"
+     "comment: comment1, :include:/etc/mail/aliases.comment\n"
+     "many: :include:/etc/mail/aliases.many\n");
   free (path);
 
-  path = xasprintf ("%s/etc/aliases.user1", chroot_env->path_chroot);
+  path = xasprintf ("%s/etc/mail/aliases.user1", chroot_env->path_chroot);
   add_temp_file (path);
   support_write_file_string (path, "alias1\n");
   free (path);
 
-  path = xasprintf ("%s/etc/aliases.user2", chroot_env->path_chroot);
+  path = xasprintf ("%s/etc/mail/aliases.user2", chroot_env->path_chroot);
   add_temp_file (path);
   support_write_file_string (path, "alias1a, alias2\n");
   free (path);
 
-  path = xasprintf ("%s/etc/aliases.comment", chroot_env->path_chroot);
+  path = xasprintf ("%s/etc/mail/aliases.comment", chroot_env->path_chroot);
   add_temp_file (path);
   support_write_file_string
     (path,
@@ -75,7 +75,7 @@ prepare (int argc, char **argv)
      "comment2\n");
   free (path);
 
-  path = xasprintf ("%s/etc/aliases.many", chroot_env->path_chroot);
+  path = xasprintf ("%s/etc/mail/aliases.many", chroot_env->path_chroot);
   add_temp_file (path);
   FILE *fp = xfopen (path, "w");
   for (int i = 0; i < many_aliases; ++i)
