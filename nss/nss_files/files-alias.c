@@ -42,7 +42,7 @@ internal_setent (FILE **stream)
 
   if (*stream == NULL)
     {
-      *stream = __nss_files_fopen ("/etc/aliases");
+      *stream = __nss_files_fopen ("/etc/mail/aliases");
 
       if (*stream == NULL)
 	status = errno == EAGAIN ? NSS_STATUS_TRYAGAIN : NSS_STATUS_UNAVAIL;
