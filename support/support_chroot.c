@@ -52,13 +52,19 @@ support_chroot_create (struct support_chroot_configuration conf)
   xmkdir (path_etc, 0777);
   add_temp_file (path_etc);
 
+  /* Create the /etc/mail directory in the chroot environment.  */
+  char *path_etc_mail = xasprintf ("%s/etc/mail", chroot->path_chroot);
+  xmkdir (path_etc_mail, 0777);
+  add_temp_file (path_etc_mail);
+
   write_file (path_etc, "resolv.conf", conf.resolv_conf,
               &chroot->path_resolv_conf);
   write_file (path_etc, "hosts", conf.hosts, &chroot->path_hosts);
   write_file (path_etc, "host.conf", conf.host_conf, &chroot->path_host_conf);
-  write_file (path_etc, "aliases", conf.aliases, &chroot->path_aliases);
+  write_file (path_etc_mail, "aliases", conf.aliases, &chroot->path_aliases);
 
   free (path_etc);
+  free (path_etc_mail);
 
   /* valgrind needs a temporary directory in the chroot.  */
   {
