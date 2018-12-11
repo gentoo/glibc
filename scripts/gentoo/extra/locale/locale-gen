@@ -181,6 +181,10 @@ if [[ -z ${locales_to_generate} ]] && [[ -e ${CONFIG} ]] ; then
 		ewarn "Some might be filtered, but you must fix it."
 		locales_to_generate=$(echo "${locales_to_generate}" | uniq)
 	fi
+
+	if echo ${locales_to_generate} | grep -vq 'C.UTF-8' ; then
+		locales_to_generate=$(echo "${locales_to_generate}" ; echo "C.UTF-8 UTF-8")
+	fi
 fi
 
 if [[ -z ${locales_to_generate} ]] ; then
