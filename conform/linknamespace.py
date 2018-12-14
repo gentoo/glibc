@@ -157,7 +157,9 @@ def main():
     files_seen = set()
     all_undef = {}
     current_undef = {}
-    compiler = '%s %s' % (args.cc, args.flags)
+    # -O0 avoid failures like
+    # '[initial] ptsname_r -> [libc.a(ptsname.o)] ptsname'
+    compiler = '%s %s -O0' % (args.cc, args.flags)
     c_syms = glibcconform.list_exported_functions(compiler, args.standard,
                                                   args.header)
     with tempfile.TemporaryDirectory() as temp_dir:
