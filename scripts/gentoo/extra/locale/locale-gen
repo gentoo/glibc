@@ -343,7 +343,7 @@ ret=$(( 0 ${JOB_RETS[@]/#/+} ))
 [[ ${QUIET} -eq 0 ]] && [[ -z ${JUST_LIST} ]] && \
 einfo "Generation complete"
 
-if ${LOCALE_ARCHIVE} ; then
+if ${LOCALE_ARCHIVE} && [[ -z ${JUST_LIST} ]] ; then
 	ebegin "Adding locales to archive"
 	# The pattern ends with / on purpose: we don't care about files (like
 	# locale-archive) in the locale subdir, and we definitely don't want to
@@ -371,7 +371,7 @@ if ${LOCALE_ARCHIVE} ; then
 fi
 
 # Remove locales that existed but were not requested
-if [[ -n ${UPDATE} ]] ; then
+if [[ -n ${UPDATE} ]] && [[ -z ${JUST_LIST} ]] ; then
 	# Ignore these pseudo locales
 	existing_locales=${existing_locales/ C / }
 	existing_locales=${existing_locales/ POSIX / }
