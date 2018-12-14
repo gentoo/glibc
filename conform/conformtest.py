@@ -570,7 +570,7 @@ class HeaderTests(object):
         o_file = os.path.join(self.temp_dir, 'test.o')
         with open(c_file, 'w') as c_file_out:
             c_file_out.write('#include <%s>\n%s' % (self.header, text))
-        cmd = ('%s %s -c %s -o %s' % (self.cc, self.cflags, c_file, o_file))
+        cmd = ('%s %s -O0 -c %s -o %s' % (self.cc, self.cflags, c_file, o_file))
         try:
             subprocess.check_call(cmd, shell=True)
         except subprocess.CalledProcessError:
@@ -624,7 +624,9 @@ class HeaderTests(object):
         out_file = os.path.join(self.temp_dir, 'namespace-out')
         with open(c_file, 'w') as c_file_out:
             c_file_out.write('#include <%s>\n' % self.header)
-        cmd = ('%s %s -E %s -P -Wp,-dD > %s'
+        # -O0 to negate effect of possible -O<N> passed to $CC
+        # See https://bugs.gentoo.org/659030#c6
+        cmd = ('%s -O0 %s -E %s -P -Wp,-dN > %s'
                % (self.cc, self.cflags_namespace, c_file, out_file))
         subprocess.check_call(cmd, shell=True)
         bad_tokens = set()
