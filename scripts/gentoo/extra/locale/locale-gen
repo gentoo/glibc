@@ -73,8 +73,10 @@ QUIET=0
 SET_X=""
 LOCALE_ARCHIVE=true
 CUTF_ADDED=""
+INPLACE_GLIBC=""
 while [[ $# -gt 0 ]] ; do
 	case $1 in
+		--inplace-glibc)           INPLACE_GLIBC=$1;;
 		-k|--keep|--keep-existing) KEEP=$1;;
 		-d|--destdir)              shift; DESTDIR=$1; unset ROOT;;
 		-c|--config)               shift; CONFIG=$1;;
@@ -262,13 +264,30 @@ generate_locale() {
 		# jobs don't tromp on each other
 		x=$(
 			[[ -n ${output} ]] && ebegin "${output}"
-			"${DESTDIR}"usr/bin/localedef ${LOCALEDEF_OPTS} \
-				--no-archive \
-				-i "${input}" \
-				-f "${charmap}" \
-				-A "${ALIAS}" \
-				--prefix "${DESTDIR%${EPREFIX}/}/" \
-				"${locale}" 2>&1
+			# In most cases, localedef can just use the system glibc.
+			# However, if we are within a major glibc upgrade, this may fail
+			# in src_* phases since the new localedef links against the new
+			# glibc, but the new glibc is not installed yet...
+			if [[ -z ${INPLACE_GLIBC} ]] ; then
+				"${DESTDIR}"usr/bin/localedef ${LOCALEDEF_OPTS} \
+					--no-archive \
+					-i "${input}" \
+					-f "${charmap}" \
+					-A "${ALIAS}" \
+					--prefix "${DESTDIR%${EPREFIX}/}/" \
+					"${locale}" 2>&1
+			else
+				# We assume that the current directory is "${ED}"/$(get_libdir),
+				# see the glibc ebuild, function glibc_sanity_check(), for why.
+				LC_ALL=C ./ld-*.so --library-path . \
+					"${DESTDIR}"usr/bin/localedef ${LOCALEDEF_OPTS} \
+					--no-archive \
+					-i "${input}" \
+					-f "${charmap}" \
+					-A "${ALIAS}" \
+					--prefix "${DESTDIR%${EPREFIX}/}/" \
+					"${locale}" 2>&1
+			fi
 			ret=$?
 			[[ -n ${output} ]] && eend ${ret}
 			exit ${ret}
@@ -363,10 +382,24 @@ if ${LOCALE_ARCHIVE} && [[ -z ${JUST_LIST} ]] ; then
 	for LOC in "${LOCALEDIR}"/*/; do 
 		LOC=${LOC%/} # Strip trailing /, since localedef doesn't like it
 		x=$(
-			"${DESTDIR}"usr/bin/localedef \
-				--add-to-archive "${LOC}" \
-				--replace \
-				--prefix "${DESTDIR%${EPREFIX}/}/"
+			# In most cases, localedef can just use the system glibc.
+			# However, if we are within a major glibc upgrade, this may fail
+			# in src_* phases since the new localedef links against the new
+			# glibc, but the new glibc is not installed yet...
+			if [[ -z ${INPLACE_GLIBC} ]] ; then
+				"${DESTDIR}"usr/bin/localedef \
+					--add-to-archive "${LOC}" \
+					--replace \
+					--prefix "${DESTDIR%${EPREFIX}/}/"
+			else
+				# We assume that the current directory is "${ED}"/$(get_libdir),
+				# see the glibc ebuild, function glibc_sanity_check(), for why.
+				LC_ALL=C ./ld-*.so --library-path . \
+					"${DESTDIR}"usr/bin/localedef \
+					--add-to-archive "${LOC}" \
+					--replace \
+					--prefix "${DESTDIR%${EPREFIX}/}/"
+			fi
 			ret=$?
 			if [[ -n ${output} ]] ; then
 				echo "${x}"
