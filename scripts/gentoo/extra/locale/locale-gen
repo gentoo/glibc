@@ -72,6 +72,7 @@ JOBS_MAX=""
 QUIET=0
 SET_X=""
 LOCALE_ARCHIVE=true
+CUTF_ADDED=""
 while [[ $# -gt 0 ]] ; do
 	case $1 in
 		-k|--keep|--keep-existing) KEEP=$1;;
@@ -183,13 +184,24 @@ if [[ -z ${locales_to_generate} ]] && [[ -e ${CONFIG} ]] ; then
 	fi
 
 	if echo ${locales_to_generate} | grep -vq 'C.UTF-8' ; then
-		locales_to_generate=$(echo "${locales_to_generate}" ; echo "C.UTF-8 UTF-8")
+		if [[ -z  ${locales_to_generate} ]] ; then
+			locales_to_generate='C.UTF-8 UTF-8'
+		else
+			locales_to_generate=$(echo "${locales_to_generate}" ; echo -n 'C.UTF-8 UTF-8')
+		fi
+		CUTF_ADDED="true"
 	fi
 fi
 
 if [[ -z ${locales_to_generate} ]] ; then
 	[[ ${QUIET} -eq 0 ]] && [[ -z ${JUST_LIST} ]] && \
-		ewarn "No locales found"
+		ewarn "No locales found, keeping locale archive"
+	exit 0
+fi
+
+if [[ ${locales_to_generate} == "C.UTF-8 UTF-8" ]] && [[ -n ${CUTF_ADDED} ]] ; then
+	[[ ${QUIET} -eq 0 ]] && [[ -z ${JUST_LIST} ]] && \
+		ewarn "No locales found, keeping locale archive"
 	exit 0
 fi
 
