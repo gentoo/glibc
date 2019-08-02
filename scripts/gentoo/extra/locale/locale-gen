@@ -20,6 +20,8 @@ source "${EPREFIX}"${FUNCTIONS_SH} || {
 	exit 1
 }
 
+COMPILED_LOCALES=""
+
 show_usage() {
 	cat <<-EOF
 	Usage: ${HILITE}${argv0}${NORMAL} ${GOOD}[options]${NORMAL} -- ${GOOD}[localedef options]${NORMAL}
@@ -96,6 +98,15 @@ while [[ $# -gt 0 ]] ; do
 	esac
 	shift
 done
+
+if [[ -n ${COMPILED_LOCALES} ]] ; then
+	ewarn "All locales have been installed and registered by the package manager. If you"
+	ewarn "rebuild the locale archive now, file integrity tools may show it as corrupted."
+	ewarn "This is not really a big problem, but a better solution is to disable"
+	ewarn "USE=compile-locales and re-install glibc if you dont need all locales."
+	echo
+fi
+
 if [[ -z ${JOBS_MAX} ]] ; then
 	JOBS_MAX=$(getconf _NPROCESSORS_ONLN 2>/dev/null)
 	: ${JOBS_MAX:=1}
