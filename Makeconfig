@@ -1333,6 +1333,23 @@ test-name = $(strip $(patsubst %.out, %, $(patsubst $(common-objpfx)%, %, $@)))
 # Likewise, in XFAIL variable names.
 test-xfail-name = $(strip $(patsubst %.out, %, $(patsubst $(objpfx)%, %, $@)))
 
+####
+# Test failures caused by the Gentoo build environment
+####
+#
+# 1) Sandbox
+test-xfail-tst-ldconfig-bad-aux-cache = yes
+test-xfail-tst-pldd = yes
+test-xfail-tst-mallocfork2 = yes
+test-xfail-tst-nss-db-endgrent = yes
+test-xfail-tst-nss-db-endpwent = yes
+test-xfail-tst-nss-files-hosts-long = yes
+test-xfail-tst-nss-test3 = yes
+#
+####
+#
+####
+
 # Command to output a test status line (such as PASS: test-name).  If
 # test-xfail-$(test-xfail-name) has a nonempty value, the status will be
 # XPASS or XFAIL rather than PASS or FAIL.
