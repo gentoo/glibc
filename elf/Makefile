@@ -410,7 +410,8 @@ tests-special += $(objpfx)order-cmp.out $(objpfx)tst-array1-cmp.out \
 		 $(objpfx)tst-array4-cmp.out $(objpfx)tst-array5-cmp.out \
 		 $(objpfx)tst-array5-static-cmp.out $(objpfx)order2-cmp.out \
 		 $(objpfx)tst-initorder-cmp.out \
-		 $(objpfx)tst-initorder2-cmp.out
+		 $(objpfx)tst-initorder2-cmp.out $(objpfx)tst-unused-dep.out \
+		 $(objpfx)tst-unused-dep-cmp.out
 endif
 
 check-abi: $(objpfx)check-abi-ld.out
@@ -1442,6 +1443,19 @@ $(objpfx)tst-relsort1mod1.so: $(libm) $(objpfx)tst-relsort1mod2.so
 $(objpfx)tst-relsort1mod2.so: $(libm)
 $(objpfx)tst-relsort1.out: $(objpfx)tst-relsort1mod1.so \
 			   $(objpfx)tst-relsort1mod2.so
+
+$(objpfx)tst-unused-dep.out: $(objpfx)testobj1.so
+	$(test-wrapper-env) \
+	LD_TRACE_LOADED_OBJECTS=1 \
+	LD_DEBUG=unused \
+	LD_PRELOAD= \
+	$(rtld-prefix) \
+	  $< > $@; \
+	$(evaluate-test)
+
+$(objpfx)tst-unused-dep-cmp.out: $(objpfx)tst-unused-dep.out
+	cmp $< /dev/null > $@; \
+	$(evaluate-test)
 
 $(objpfx)tst-audit11.out: $(objpfx)tst-auditmod11.so $(objpfx)tst-audit11mod1.so
 $(objpfx)tst-audit11: $(libdl)

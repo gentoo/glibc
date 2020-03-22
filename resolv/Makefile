@@ -72,6 +72,8 @@ tests += \
 
 # Needs resolv_context.
 tests-internal += \
+  tst-resolv-res_init \
+  tst-resolv-res_init-thread \
   tst-resolv-res_ninit \
   tst-resolv-threads \
 
