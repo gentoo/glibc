@@ -150,6 +150,9 @@ __alloc_dir (int fd, bool close_fd, int flags,
   dirp->offset = 0;
   dirp->filepos = 0;
   dirp->errcode = 0;
+#ifndef __LP64__
+  dirstream_loc_init (&dirp->locs);
+#endif
 
   return dirp;
 }
