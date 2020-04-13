@@ -28,13 +28,9 @@
 
 /* Read a directory entry from DIRP.  */
 struct dirent64 *
-__readdir64 (DIR *dirp)
+__readdir64_unlocked (DIR *dirp)
 {
   const int saved_errno = errno;
-
-#if IS_IN (libc)
-  __libc_lock_lock (dirp->lock);
-#endif
 
   if (dirp->offset >= dirp->size)
     {
@@ -64,6 +60,20 @@ __readdir64 (DIR *dirp)
   dirp->offset += dp->d_reclen;
 
   dirp->filepos = dp->d_off;
+
+  return dp;
+}
+
+struct dirent64 *
+__readdir64 (DIR *dirp)
+{
+  struct dirent64 *dp;
+
+#if IS_IN (libc)
+  __libc_lock_lock (dirp->lock);
+#endif
+
+  dp = __readdir64_unlocked (dirp);
 
 #if IS_IN (libc)
   __libc_lock_unlock (dirp->lock);
