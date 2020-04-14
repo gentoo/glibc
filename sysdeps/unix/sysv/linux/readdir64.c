@@ -101,14 +101,10 @@ versioned_symbol (libc, __readdir64, readdir64, GLIBC_2_2);
 
 attribute_compat_text_section
 struct __old_dirent64 *
-__old_readdir64 (DIR *dirp)
+__old_readdir64_unlocked (DIR *dirp)
 {
   struct __old_dirent64 *dp;
   int saved_errno = errno;
-
-#if IS_IN (libc)
-  __libc_lock_lock (dirp->lock);
-#endif
 
   do
     {
@@ -152,6 +148,21 @@ __old_readdir64 (DIR *dirp)
 
       /* Skip deleted files.  */
     } while (dp->d_ino == 0);
+
+  return dp;
+}
+
+attribute_compat_text_section
+struct __old_dirent64 *
+__old_readdir64 (DIR *dirp)
+{
+  struct __old_dirent64 *dp;
+
+#if IS_IN (libc)
+  __libc_lock_lock (dirp->lock);
+#endif
+
+  dp = __old_readdir64_unlocked (dirp);
 
 #if IS_IN (libc)
   __libc_lock_unlock (dirp->lock);
