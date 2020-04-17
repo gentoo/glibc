@@ -348,29 +348,35 @@ extern int alphasort64 (const struct dirent64 **__e1,
 /* Read directory entries from FD into BUF, reading at most NBYTES.
    Reading starts at offset *BASEP, and *BASEP is updated with the new
    position after reading.  Returns the number of bytes read; zero when at
-   end of directory; or -1 for errors.  */
+   end of directory; or -1 for errors.
+   This is deprecated and getdents64 or readdir should be used instead.  */
 # ifndef __USE_FILE_OFFSET64
 extern __ssize_t getdirentries (int __fd, char *__restrict __buf,
 				size_t __nbytes,
 				__off_t *__restrict __basep)
-     __THROW __nonnull ((2, 4));
+     __THROW __nonnull ((2, 4))
+     __attribute_deprecated_msg__ ("Use getdents64 instead");
 # else
 #  ifdef __REDIRECT
 extern __ssize_t __REDIRECT_NTH (getdirentries,
 				 (int __fd, char *__restrict __buf,
 				  size_t __nbytes,
 				  __off64_t *__restrict __basep),
-				 getdirentries64) __nonnull ((2, 4));
+				 getdirentries64)
+     __THROW __nonnull ((2, 4))
+     __attribute_deprecated_msg__ ("Use getdents64 instead");
 #  else
 #   define getdirentries getdirentries64
 #  endif
 # endif
 
 # ifdef __USE_LARGEFILE64
+/* This is deprecated and getdents64 or readdir64 should be used instead.  */
 extern __ssize_t getdirentries64 (int __fd, char *__restrict __buf,
 				  size_t __nbytes,
 				  __off64_t *__restrict __basep)
-     __THROW __nonnull ((2, 4));
+     __THROW __nonnull ((2, 4))
+     __attribute_deprecated_msg__ ("Use getdents64 instead");
 # endif
 #endif /* Use misc.  */
 

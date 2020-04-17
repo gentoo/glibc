@@ -313,6 +313,9 @@ tests += tst-getdents64
 # The tested readdir64 symbol was replaced in glibc 2.2.
 ifeq ($(have-GLIBC_2.1.3)$(build-shared),yesyes)
 tests += tst-readdir64-compat
+
+# Avoid the warning for the weak_alias for _DIRENT_MATCHES_DIRENT64
+CFLAGS-getdirentries64.c = -Wno-deprecated-declarations
 endif
 endif # $(subdir) == dirent
 
