@@ -338,6 +338,10 @@ tests += tst-getdents64
 ifeq ($(have-GLIBC_2.1.3)$(build-shared),yesyes)
 tests += tst-readdir64-compat
 endif
+
+# Avoid the warning for the weak_alias for _DIRENT_MATCHES_DIRENT64
+CFLAGS-getdirentries64.o = -Wno-deprecated-declarations
+CFLAGS-getdirentries64.os = -Wno-deprecated-declarations
 endif # $(subdir) == dirent
 
 ifeq ($(subdir),nis)
