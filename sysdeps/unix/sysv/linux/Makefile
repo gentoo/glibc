@@ -365,6 +365,10 @@ tests += \
   tst-getdents64 \
   tst-readdir64-compat \
   # tests
+
+# Avoid the warning for the weak_alias for _DIRENT_MATCHES_DIRENT64
+CFLAGS-getdirentries64.o = -Wno-deprecated-declarations
+CFLAGS-getdirentries64.os = -Wno-deprecated-declarations
 endif # $(subdir) == dirent
 
 ifeq ($(subdir),nis)
