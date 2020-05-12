@@ -1,5 +1,0 @@
-What is all this you may wonder.
-
-locale/
-	a port/rewrite of Debian's locale-gen.  see the man pages in the
-	subdir for more information.
