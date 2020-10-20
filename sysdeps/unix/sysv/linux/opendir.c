@@ -23,6 +23,11 @@
 
 #include <not-cancel.h>
 
+#include <shlib-compat.h>
+#if SHLIB_COMPAT(libc, GLIBC_2_1, GLIBC_2_2)
+# include <olddirent.h>
+#endif
+
 enum {
   opendir_oflags = O_RDONLY|O_NDELAY|O_DIRECTORY|O_LARGEFILE|O_CLOEXEC
 };
@@ -128,7 +133,15 @@ __alloc_dir (int fd, bool close_fd, int flags,
      expand the buffer if required.  */
   enum
     {
-      tbuffer_size = sizeof (struct dirent) + NAME_MAX + 1
+      tbuffer_size =
+# if SHLIB_COMPAT(libc, GLIBC_2_1, GLIBC_2_2)
+      /* This is used on compat readdir64.  */
+		     MAX (sizeof (struct dirent),
+			  sizeof (struct __old_dirent64))
+# else
+		     sizeof (struct dirent)
+# endif
+                     + NAME_MAX + 1
     };
   dirp->tbuffer = malloc (tbuffer_size);
   if (dirp->tbuffer == NULL)
