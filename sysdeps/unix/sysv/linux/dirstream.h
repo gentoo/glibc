@@ -41,6 +41,11 @@ struct __dirstream
 
     int errcode;		/* Delayed error code.  */
 
+#if !defined __OFF_T_MATCHES_OFF64_T || !defined __INO_T_MATCHES_INO64_T
+    char *tbuffer;		/* Translation buffer for non-LFS calls.  */
+    size_t tbuffer_size;	/* Size of translation buffer.  */
+#endif
+
     /* Directory block.  We must make sure that this block starts
        at an address that is aligned adequately enough to store
        dirent entries.  Using the alignment of "void *" is not

@@ -47,6 +47,10 @@ __closedir (DIR *dirp)
   __libc_lock_fini (dirp->lock);
 #endif
 
+#if !_DIRENT_MATCHES_DIRENT64
+  free (dirp->tbuffer);
+#endif
+
   free ((void *) dirp);
 
   return __close_nocancel (fd);
