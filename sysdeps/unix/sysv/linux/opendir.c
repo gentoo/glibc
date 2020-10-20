@@ -120,6 +120,27 @@ __alloc_dir (int fd, bool close_fd, int flags,
       return NULL;
     }
 
+#if !_DIRENT_MATCHES_DIRENT64
+  /* Allocates a translation buffer to use as the returned 'struct direct'
+     for non-LFS 'readdir' calls.
+
+     The initial NAME_MAX size should handle most cases, while readdir might
+     expand the buffer if required.  */
+  enum
+    {
+      tbuffer_size = sizeof (struct dirent) + NAME_MAX + 1
+    };
+  dirp->tbuffer = malloc (tbuffer_size);
+  if (dirp->tbuffer == NULL)
+    {
+      free (dirp);
+      if (close_fd)
+	__close_nocancel_nostatus (fd);
+      return NULL;
+    }
+  dirp->tbuffer_size = tbuffer_size;
+#endif
+
   dirp->fd = fd;
 #if IS_IN (libc)
   __libc_lock_init (dirp->lock);
