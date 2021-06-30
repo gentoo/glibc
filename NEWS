@@ -7,6 +7,11 @@ using `glibc' in the "product" field.
 
 Version 2.34.1
 
+Major new features:
+
+* The audit libraries will avoid unnecessary slowdown if it is not required
+  PLT tracking (by not implementing the la_pltenter or la_pltexit callbacks).
+
 Deprecated and removed features, and other changes affecting compatibility:
 
 * The function getdirentries is now deprecated, applications should use
