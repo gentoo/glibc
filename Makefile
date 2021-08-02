@@ -110,6 +110,7 @@ elf/ldso_install:
 ifeq (no,$(cross-compiling))
 ifeq (yes,$(build-shared))
 install:
+dont-bother-with-destdir:
 	-test ! -x $(elf-objpfx)ldconfig || LC_ALL=C \
 	  $(elf-objpfx)ldconfig $(addprefix -r ,$(install_root)) \
 				$(slibdir) $(libdir)
