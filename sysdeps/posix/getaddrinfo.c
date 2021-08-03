@@ -2003,6 +2003,7 @@ gaiconf_init (void)
 	      l = l->next;
 	    }
 	  free_prefixlist (labellist);
+	  labellist = NULL;
 
 	  /* Sort the entries so that the most specific ones are at
 	     the beginning.  */
@@ -2041,6 +2042,7 @@ gaiconf_init (void)
 	      l = l->next;
 	    }
 	  free_prefixlist (precedencelist);
+	  precedencelist = NULL;
 
 	  /* Sort the entries so that the most specific ones are at
 	     the beginning.  */
