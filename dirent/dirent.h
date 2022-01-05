@@ -363,7 +363,7 @@ extern __ssize_t __REDIRECT_NTH (getdirentries,
 				  size_t __nbytes,
 				  __off64_t *__restrict __basep),
 				 getdirentries64)
-     __THROW __nonnull ((2, 4))
+     __nonnull ((2, 4))
      __attribute_deprecated_msg__ ("Use getdents64 instead");
 #  else
 #   define getdirentries getdirentries64
