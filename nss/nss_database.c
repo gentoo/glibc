@@ -424,11 +424,11 @@ nss_database_check_reload_and_get (struct nss_database_state *local,
      errors here are very unlikely, but the chance that we're entering
      a container is also very unlikely, so we err on the side of both
      very unlikely things not happening at the same time.  */
-  if (__stat64_time64 ("/", &str) != 0
-      || (local->root_ino != 0
-	  && (str.st_ino != local->root_ino
-	      ||  str.st_dev != local->root_dev)))
-    {
+  if (__stat64_time64 ("/", &str) != 0)
+    return false;
+
+  if (local->root_ino != 0 && (str.st_ino != local->root_ino
+                              || str.st_dev != local->root_dev))
       /* Change detected; disable reloading and return current state.  */
       atomic_store_release (&local->data.reload_disabled, 1);
       *result = local->data.services[database_index];
