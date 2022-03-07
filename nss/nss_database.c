@@ -424,8 +424,10 @@ nss_database_check_reload_and_get (struct nss_database_state *local,
      errors here are very unlikely, but the chance that we're entering
      a container is also very unlikely, so we err on the side of both
      very unlikely things not happening at the same time.  */
-  if (__stat64_time64 ("/", &str) != 0)
+  if (__stat64_time64 ("/", &str) != 0) {
+    __libc_lock_unlock (local->lock);
     return false;
+  }
 
   if (local->root_ino != 0 && (str.st_ino != local->root_ino
                               || str.st_dev != local->root_dev))
