@@ -34,7 +34,7 @@
 #include <tls.h>
 
 /* Mutex type.  */
-typedef int __libc_lock_t __LOCK_ALIGNMENT;
+typedef int __libc_lock_t;
 typedef struct { pthread_mutex_t mutex; } __rtld_lock_recursive_t;
 typedef pthread_rwlock_t __libc_rwlock_t;
 
