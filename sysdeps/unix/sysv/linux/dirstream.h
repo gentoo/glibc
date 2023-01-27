@@ -24,6 +24,11 @@
 #include <libc-lock.h>
 #include <telldir.h>
 
+#include <shlib-compat.h>
+#if SHLIB_COMPAT(libc, GLIBC_2_1, GLIBC_2_2)
+# include <olddirent.h>
+#endif
+
 /* Directory stream type.
 
    The miscellaneous Unix `readdir' implementations read directory data
@@ -44,7 +49,13 @@ struct __dirstream
     int errcode;		/* Delayed error code.  */
 
 #if !defined __OFF_T_MATCHES_OFF64_T || !defined __INO_T_MATCHES_INO64_T
-    struct dirent tdp;
+    union
+      {
+        struct dirent tdp;
+#if  SHLIB_COMPAT(libc, GLIBC_2_1, GLIBC_2_2)
+        struct __old_dirent64 tdp64;
+#    endif
+      };
 #endif
 #if _DIRENT_OFFSET_TRANSLATION
     struct dirstream_loc_t locs; /* off64_t to long int map for telldir.  */
