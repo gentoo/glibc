@@ -41,6 +41,14 @@ do_test (void)
       if (i == 400)
 	break;
     }
+  if (i < 3)
+    {
+      /* Non-lfs opendir skips entries that can not be represented (for
+	 instance if d_off is not an offset but rather an internal filesystem
+	 representation.  For this case there is no point in continue the
+	 testcase.  */
+      return 77;
+    }
 
   printf ("going back past 4-th entry...\n");
 

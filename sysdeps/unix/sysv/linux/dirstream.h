@@ -22,6 +22,7 @@
 #include <sys/types.h>
 
 #include <libc-lock.h>
+#include <telldir.h>
 
 /* Directory stream type.
 
@@ -38,12 +39,15 @@ struct __dirstream
     size_t size;		/* Total valid data in the block.  */
     size_t offset;		/* Current offset into the block.  */
 
-    off_t filepos;		/* Position of next entry to read.  */
+    off64_t filepos;		/* Position of next entry to read.  */
 
     int errcode;		/* Delayed error code.  */
 
 #if !defined __OFF_T_MATCHES_OFF64_T || !defined __INO_T_MATCHES_INO64_T
     struct dirent tdp;
+#endif
+#if _DIRENT_OFFSET_TRANSLATION
+    struct dirstream_loc_t locs; /* off64_t to long int map for telldir.  */
 #endif
 
     /* Directory block.  We must make sure that this block starts

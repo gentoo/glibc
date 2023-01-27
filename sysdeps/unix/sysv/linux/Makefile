@@ -546,6 +546,7 @@ sysdep_routines += \
 
 tests += \
   tst-getdents64 \
+  tst-opendir-nolfs \
   tst-readdir64-compat \
   # tests
 endif # $(subdir) == dirent
