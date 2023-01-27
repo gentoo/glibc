@@ -155,8 +155,12 @@ do_test (void)
     }
   if (n != 6)
     {
+      /* Non-lfs opendir skips entries that can not be represented (for
+	 instance if d_off is not an offset but rather an internal filesystem
+	 representation.  For this case there is no point in continue the
+	 testcase.  */
       printf ("scandir returned %d entries instead of 6\n", n);
-      return 1;
+      return EXIT_UNSUPPORTED;
     }
 
   struct

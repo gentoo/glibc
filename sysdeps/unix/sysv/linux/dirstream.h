@@ -18,6 +18,7 @@
 #ifndef	_DIRSTREAM_H
 #define	_DIRSTREAM_H	1
 
+#include <dirent.h>
 #include <sys/types.h>
 
 #include <libc-lock.h>
@@ -40,6 +41,10 @@ struct __dirstream
     off_t filepos;		/* Position of next entry to read.  */
 
     int errcode;		/* Delayed error code.  */
+
+#if !defined __OFF_T_MATCHES_OFF64_T || !defined __INO_T_MATCHES_INO64_T
+    struct dirent tdp;
+#endif
 
     /* Directory block.  We must make sure that this block starts
        at an address that is aligned adequately enough to store
