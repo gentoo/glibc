@@ -104,14 +104,10 @@ versioned_symbol (libc, __readdir64, readdir64, GLIBC_2_2);
 
 attribute_compat_text_section
 struct __old_dirent64 *
-__old_readdir64 (DIR *dirp)
+__old_readdir64_unlocked (DIR *dirp)
 {
   struct __old_dirent64 *dp;
   int saved_errno = errno;
-
-#if IS_IN (libc)
-  __libc_lock_lock (dirp->lock);
-#endif
 
   if (dirp->offset >= dirp->size)
     {
@@ -129,9 +125,6 @@ __old_readdir64 (DIR *dirp)
 	     do not set errno in that case, to indicate success.  */
 	  if (bytes == 0 || errno == ENOENT)
 	    __set_errno (saved_errno);
-#if IS_IN (libc)
-	  __libc_lock_unlock (dirp->lock);
-#endif
 	  return NULL;
 	}
       dirp->size = (size_t) bytes;
@@ -143,6 +136,21 @@ __old_readdir64 (DIR *dirp)
   dp = (struct __old_dirent64 *) &dirp->data[dirp->offset];
   dirp->offset += dp->d_reclen;
   dirp->filepos = dp->d_off;
+
+  return dp;
+}
+
+attribute_compat_text_section
+struct __old_dirent64 *
+__old_readdir64 (DIR *dirp)
+{
+  struct __old_dirent64 *dp;
+
+#if IS_IN (libc)
+  __libc_lock_lock (dirp->lock);
+#endif
+
+  dp = __old_readdir64_unlocked (dirp);
 
 #if IS_IN (libc)
   __libc_lock_unlock (dirp->lock);
