@@ -36,6 +36,15 @@ dirstream_entry (struct __dirstream *ds, const struct dirent64 *dp64)
   if (dp64->d_reclen - offsetof (struct dirent64, d_name) > NAME_MAX)
     return false;
 
+  /* telldir can not return an error, so preallocate the map if the entry can
+     not be packed directly.  */
+  if (telldir_need_dirstream (dp64->d_off))
+    {
+      dirstream_loc_add (&ds->locs, dp64->d_off);
+      if (dirstream_loc_has_failed (&ds->locs))
+	return false;
+    }
+
   ds->filepos = dp64->d_off;
 
   ds->tdp.d_off = dp64->d_off;
@@ -76,7 +85,7 @@ __readdir_unlocked (DIR *dirp)
 
  	  /* Reset the offset into the buffer.  */
 	  dirp->offset = 0;
- 	}
+	}
 
       struct dirent64 *dp64 = (struct dirent64 *) &dirp->data[dirp->offset];
       dirp->offset += dp64->d_reclen;

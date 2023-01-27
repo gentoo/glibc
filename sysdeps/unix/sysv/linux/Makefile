@@ -465,6 +465,7 @@ ifeq ($(subdir),dirent)
 sysdep_routines += getdirentries getdirentries64
 tests += \
   tst-getdents64 \
+  tst-opendir-nolfs \
   tst-readdir64-compat \
   # tests
 endif # $(subdir) == dirent

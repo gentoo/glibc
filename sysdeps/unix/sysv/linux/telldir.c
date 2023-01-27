@@ -15,9 +15,11 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
+#include <assert.h>
 #include <dirent.h>
 
 #include <dirstream.h>
+#include <telldir.h>
 
 /* Return the current position of DIRP.  */
 long int
@@ -26,7 +28,40 @@ telldir (DIR *dirp)
   long int ret;
 
   __libc_lock_lock (dirp->lock);
+
+#if _DIRENT_OFFSET_TRANSLATION
+  /* If the directory position fits in the packet structure, returns it.
+     Otherwise, check if the position is already been recorded in the
+     dynamic array.  If not, add the new record.  */
+
+  union dirstream_packed dsp;
+
+  if (!telldir_need_dirstream (dirp->filepos))
+    {
+      dsp.p.is_packed = 1;
+      dsp.p.info = dirp->filepos;
+    }
+  else
+    {
+      dsp.l = -1;
+
+      size_t i;
+      for (i = 0; i < dirstream_loc_size (&dirp->locs); i++)
+	if (*dirstream_loc_at (&dirp->locs, i) == dirp->filepos)
+	  break;
+      /* It should be pre-allocated on readdir.  */
+      assert (i != dirstream_loc_size (&dirp->locs));
+
+      dsp.p.is_packed = 0;
+      /* This assignment might overflow, however most likely ENOME would
+	 happen long before.  */
+      dsp.p.info = i;
+    }
+
+  ret = dsp.l;
+#else
   ret = dirp->filepos;
+#endif
   __libc_lock_unlock (dirp->lock);
 
   return ret;
