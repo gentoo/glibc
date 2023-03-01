@@ -213,6 +213,7 @@ libsupport-routines = \
   xread \
   xreadlink \
   xrealloc \
+  xreallocarray \
   xrecvfrom \
   xsendto \
   xsetlocale \
