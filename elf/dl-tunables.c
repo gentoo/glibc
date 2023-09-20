@@ -285,6 +285,9 @@ __tunables_init (char **envp)
   size_t len = 0;
   char **prev_envp = envp;
 
+  if (__glibc_unlikely (__libc_enable_secure))
+    return;
+
   maybe_enable_malloc_check ();
 
   while ((envp = get_next_env (envp, &envname, &len, &envval,
