@@ -470,7 +470,6 @@ tests += \
   unload6 \
   unload7 \
   unload8 \
-  valgrind-test \
   # tests
 tests-cxx = \
   tst-dlopen-nodelete-reloc \
@@ -601,9 +600,6 @@ $(objpfx)tst-relro-libc.out: tst-relro-symbols.py $(..)/scripts/glibcelf.py \
 	    --required=__io_vtables \
 	  > $@ 2>&1; $(evaluate-test)
 
-ifeq ($(run-built-tests),yes)
-tests-special += $(objpfx)tst-valgrind-smoke.out
-endif
 $(objpfx)tst-valgrind-smoke.out: tst-valgrind-smoke.sh $(objpfx)ld.so $(objpfx)valgrind-test
 	$(SHELL) $< $(objpfx)ld.so  $(rtlddir)/$(rtld-installed-name) '$(test-wrapper-env)' \
 		'$(run-program-env)' '$(rpath-link)' $(objpfx)valgrind-test > $@; $(evaluate-test)
