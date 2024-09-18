@@ -17,6 +17,12 @@ The following bugs are resolved with this release:
   [32026] strerror/strsignal TLS not handled correctly for secondary namespaces
   [32052] Name space violation in fortify wrappers
   [32137] libio: Attempt wide backup free only for non-legacy code
+
+Changes to build and runtime requirements:
+
+* On recent Linux kernels with vDSO getrandom support, getrandom does not
+  act as a "shall occur" cancellation point, in which case it might
+  not issue a syscall or trigger a deferred cancellation event.
 
 Version 2.40
 
