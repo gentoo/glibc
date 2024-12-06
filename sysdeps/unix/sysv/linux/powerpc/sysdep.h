@@ -223,6 +223,5 @@
 #define HAVE_TIME_VSYSCALL		"__kernel_time"
 #define HAVE_GETTIMEOFDAY_VSYSCALL      "__kernel_gettimeofday"
 #define HAVE_GET_TBFREQ                 "__kernel_get_tbfreq"
-#define HAVE_GETRANDOM_VSYSCALL         "__kernel_getrandom"
 
 #endif /* _LINUX_POWERPC_SYSDEP_H  */

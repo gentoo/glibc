@@ -20,12 +20,6 @@ The following bugs are resolved with this release:
   [32137] libio: Attempt wide backup free only for non-legacy code
   [32231] elf: Change ldconfig auxcache magic number
   [32245] glibc -Wstringop-overflow= build failure on hppa
-
-Changes to build and runtime requirements:
-
-* On recent Linux kernels with vDSO getrandom support, getrandom does not
-  act as a "shall occur" cancellation point, in which case it might
-  not issue a syscall or trigger a deferred cancellation event.
 
 Version 2.40
 

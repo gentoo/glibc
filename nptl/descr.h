@@ -404,9 +404,6 @@ struct pthread
   /* Used on strsignal.  */
   struct tls_internal_t tls_state;
 
-  /* getrandom vDSO per-thread opaque state.  */
-  void *getrandom_buf;
-
   /* rseq area registered with the kernel.  Use a custom definition
      here to isolate from kernel struct rseq changes.  The
      implementation of sched_getcpu needs acccess to the cpu_id field;

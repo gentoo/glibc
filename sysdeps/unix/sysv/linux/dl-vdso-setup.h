@@ -50,9 +50,6 @@ setup_vdso_pointers (void)
 #ifdef HAVE_RISCV_HWPROBE
   GLRO(dl_vdso_riscv_hwprobe) = dl_vdso_vsym (HAVE_RISCV_HWPROBE);
 #endif
-#ifdef HAVE_GETRANDOM_VSYSCALL
-  GLRO(dl_vdso_getrandom) = dl_vdso_vsym (HAVE_GETRANDOM_VSYSCALL);
-#endif
 }
 
 #endif
