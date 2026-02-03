@@ -18,14 +18,72 @@
 
 #include <dlfcn.h>
 #include <gnu/lib-names.h>
+#include <inttypes.h>
 #include <link.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <support/check.h>
+#include <support/support.h>
 #include <support/xdlfcn.h>
 #include <support/xunistd.h>
+#include <support/xstdio.h>
 #include <sys/mman.h>
 #include <unistd.h>
+
+/* Slow path in case we cannot find a gap with mmap (when the runtime has
+   mapped all the pages in the gap for some reason).  */
+static bool
+find_gap_with_proc_self_map (const struct link_map *l)
+{
+  int pagesize = getpagesize ();
+
+  support_need_proc ("Reads /proc/self/maps to find gap in ld.so mapping");
+
+  /* Parse /proc/self/maps and find all the mappings in the ld.so range
+     but not from ld.so.  */
+  FILE *f = xfopen ("/proc/self/maps", "r");
+  char *line = NULL, *path_ldso = NULL;
+  size_t len;
+  bool found = false;
+  while (xgetline (&line, &len, f))
+    {
+      uintptr_t from, to;
+      char *path = NULL;
+      int r = sscanf (line, "%" SCNxPTR "-%" SCNxPTR "%*s%*s%*s%*s%ms",
+                      &from, &to, &path);
+
+      TEST_VERIFY (r == 2 || r == 3);
+      TEST_COMPARE (from % pagesize, 0);
+      TEST_COMPARE (to % pagesize, 0);
+
+      if (path_ldso == NULL && l->l_map_start == from)
+        {
+          TEST_COMPARE (r, 3);
+          path_ldso = path;
+          continue;
+        }
+
+      if (from > l->l_map_start && to < l->l_map_end
+          && (r == 2 || (path_ldso != NULL && strcmp (path, path_ldso))))
+        {
+          if (r == 2)
+            printf ("info: anonymous mapping found at 0x%" PRIxPTR " - 0x%"
+                    PRIxPTR "\n", from, to);
+          else
+            printf ("info: object \"%s\" found at 0x%" PRIxPTR " - 0x%"
+                    PRIxPTR "\n", path, from, to);
+
+          found = true;
+        }
+
+      free (path);
+    }
+
+  free (path_ldso);
+  free (line);
+  xfclose (f);
+  return found;
+}
 
 static int
 do_test (void)
@@ -64,16 +122,18 @@ do_test (void)
               if ((void *) dlfo.dlfo_link_map != (void *) l)
                 {
                   printf ("info: object \"%s\" found at %p\n",
-                          dlfo.dlfo_link_map->l_name, ptr);
+                          dlfo.dlfo_link_map->l_name, expected);
                   gap_found = true;
                 }
             }
           else
             TEST_COMPARE (dlfo_ret, -1);
+
           xmunmap (ptr, 1);
           addr += pagesize;
         }
-      if (!gap_found)
+
+      if (!gap_found && !find_gap_with_proc_self_map (l))
         FAIL ("no ld.so gap found");
     }
   else
