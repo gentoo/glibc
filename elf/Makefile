@@ -97,12 +97,6 @@ ifeq (yesyes,$(build-shared)$(run-built-tests))
 tests-special += $(objpfx)list-tunables.out
 endif
 
-# Make sure that the compiler does not insert any library calls in tunables
-# code paths.
-ifeq (yes,$(have-loop-to-function))
-CFLAGS-dl-tunables.c += -fno-tree-loop-distribute-patterns
-endif
-
 all-dl-routines = $(dl-routines) $(sysdep-dl-routines)
 # But they are absent from the shared libc, because that code is in ld.so.
 elide-routines.os = \

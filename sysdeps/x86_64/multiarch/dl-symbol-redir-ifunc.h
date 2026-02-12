@@ -44,6 +44,16 @@ asm ("memset = " HAVE_MEMSET_IFUNC_GENERIC);
 
 asm ("memcmp = " HAVE_MEMCMP_IFUNC_GENERIC);
 
+#if MINIMUM_X86_ISA_LEVEL >= 4
+# define HAVE_STRCMP_IFUNC_GENERIC "__strlen_evex"
+#elif MINIMUM_X86_ISA_LEVEL == 3
+# define HAVE_STRCMP_IFUNC_GENERIC "__strlen_avx2"
+#else
+# define HAVE_STRCMP_IFUNC_GENERIC "__strlen_sse2"
+#endif
+
+asm ("strlen = " HAVE_STRCMP_IFUNC_GENERIC);
+
 #endif /* SHARED */
 
 #endif

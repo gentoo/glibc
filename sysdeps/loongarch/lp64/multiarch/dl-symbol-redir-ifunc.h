@@ -22,6 +22,7 @@
 #ifndef SHARED
 asm ("memset = __memset_aligned");
 asm ("memcmp = __memcmp_aligned");
+asm ("strlen = __strlen_aligned");
 #endif
 
 #endif

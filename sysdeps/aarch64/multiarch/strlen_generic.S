@@ -40,3 +40,7 @@
 #endif
 
 #include "../strlen.S"
+
+#if IS_IN (rtld)
+strong_alias (strlen, __strlen_generic)
+#endif

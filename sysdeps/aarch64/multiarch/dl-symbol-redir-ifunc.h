@@ -20,5 +20,6 @@
 #define _DL_IFUNC_GENERIC_H
 
 asm ("memset = __memset_generic");
+asm ("strlen = __strlen_generic");
 
 #endif
