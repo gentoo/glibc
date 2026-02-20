@@ -48,8 +48,7 @@ do_rseq_main_test (void)
   size_t rseq_align = MAX (getauxval (AT_RSEQ_ALIGN), RSEQ_MIN_ALIGN);
   size_t rseq_feature_size = MAX (getauxval (AT_RSEQ_FEATURE_SIZE),
                                   RSEQ_AREA_SIZE_INITIAL_USED);
-  size_t rseq_alloc_size = roundup (MAX (rseq_feature_size,
-                                    RSEQ_AREA_SIZE_INITIAL_USED), rseq_align);
+  size_t rseq_reg_size = MAX (rseq_feature_size, RSEQ_AREA_SIZE_INITIAL);
   struct rseq *rseq_abi = __thread_pointer () + __rseq_offset;
 
   TEST_VERIFY_EXIT (rseq_thread_registered ());
@@ -89,8 +88,8 @@ do_rseq_main_test (void)
   /* Test a rseq registration with the same arguments as the internal
      registration which should fail with errno == EBUSY.  */
   TEST_VERIFY (((unsigned long) rseq_abi % rseq_align) == 0);
-  TEST_VERIFY (__rseq_size <= rseq_alloc_size);
-  int ret = syscall (__NR_rseq, rseq_abi, rseq_alloc_size, 0, RSEQ_SIG);
+  TEST_VERIFY (__rseq_size <= rseq_reg_size);
+  int ret = syscall (__NR_rseq, rseq_abi, rseq_reg_size, 0, RSEQ_SIG);
   TEST_VERIFY (ret != 0);
   TEST_COMPARE (errno, EBUSY);
 }
