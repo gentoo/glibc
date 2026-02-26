@@ -13,6 +13,7 @@ The following bugs are resolved with this release:
    results
  [33848] build: Build fails at openat2.h, redefinition of 'struct
     open_how'
+ [33904] build: error: '__vasprintf_chk' undeclared here
 
 Version 2.43
 
