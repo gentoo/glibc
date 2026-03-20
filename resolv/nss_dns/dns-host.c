@@ -820,7 +820,7 @@ getanswer_ptr (unsigned char *packet, size_t packetlen,
   /* expected_name may be updated to point into this buffer.  */
   unsigned char name_buffer[NS_MAXCDNAME];
 
-  while (ancount > 0)
+  for (; ancount > 0; --ancount)
     {
       struct ns_rr_wire rr;
       if (!__ns_rr_cursor_next (&c, &rr))
