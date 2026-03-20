@@ -866,7 +866,7 @@ getanswer_ptr (unsigned char *packet, size_t packetlen,
 	  char hname[MAXHOSTNAMELEN + 1];
 	  if (__ns_name_unpack (c.begin, c.end, rr.rdata,
 				name_buffer, sizeof (name_buffer)) < 0
-	      || !__res_binary_hnok (expected_name)
+	      || !__res_binary_hnok (name_buffer)
 	      || __ns_name_ntop (name_buffer, hname, sizeof (hname)) < 0)
 	    {
 	      *h_errnop = NO_RECOVERY;
