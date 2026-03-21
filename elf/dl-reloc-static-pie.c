@@ -25,6 +25,7 @@
 
 #include <dl-machine.h>
 #include <dl-debug.h>
+#include <dl-symbol-redir-ifunc.h>
 
 #define RESOLVE_MAP(map, scope, sym, version, flags) map
 #include "dynamic-link.h"
