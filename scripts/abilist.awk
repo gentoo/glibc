@@ -38,7 +38,7 @@ $4 == "*UND*" { next }
 $2 == "l" { next }
 
 # If the target uses ST_OTHER, it will be output before the symbol name.
-$2 == "g" || $2 == "w" && (NF == 7 || NF == 8) {
+$2 == "g" || $2 == "w" && (NF == 6 || NF == 7 || NF == 8) {
   type = $3;
   size = $5;
   sub(/^0*/, "", size);
