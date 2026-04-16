@@ -67,12 +67,29 @@
 
 /* Since this is a stateful encoding we have to provide code which resets
    the output state to the initial state.  This has to be done during the
-   flushing.  */
+   flushing.  For the to-internal direction (FROM_DIRECTION is true),
+   there may be a pending character that needs flushing.  */
 #define EMIT_SHIFT_TO_INIT \
   if ((data->__statep->__count & ~7) != sb)				      \
     {									      \
       if (FROM_DIRECTION)						      \
-	data->__statep->__count &= 7;					      \
+	{								      \
+	  uint32_t ch = data->__statep->__count >> 7;			      \
+	  if (__glibc_unlikely (ch != 0))				      \
+	    {								      \
+	      if (__glibc_unlikely (outend - outbuf < 4))		      \
+		status = __GCONV_FULL_OUTPUT;				      \
+	      else							      \
+		{							      \
+		  put32 (outbuf, ch);					      \
+		  outbuf += 4;						      \
+		  /* Clear character and db bit.  */			      \
+		  data->__statep->__count &= 7;				      \
+		}							      \
+	    }								      \
+	  else								      \
+	    data->__statep->__count &= 7;				      \
+	}								      \
       else								      \
 	{								      \
 	  /* We are not in the initial state.  To switch back we have	      \
@@ -99,11 +116,13 @@
     *curcsp = save_curcs
 
 
-/* Current codeset type.  */
+/* Current codeset type.  The bit is stored in the __count variable of
+   the conversion state.  If the db bit is set, bit 7 and above store
+   a pending UCS-4 code point if non-zero.  */
 enum
 {
-  sb = 0,
-  db = 64
+  sb = 0,			/* Single byte mode.  */
+  db = 64			/* Double byte mode.  */
 };
 
 
@@ -119,21 +138,29 @@ enum
       }									      \
     else								      \
       {									      \
-	/* This is a combined character.  Make sure we have room.  */	      \
-	if (__glibc_unlikely (outptr + 8 > outend))			      \
-	  {								      \
-	    result = __GCONV_FULL_OUTPUT;				      \
-	    break;							      \
-	  }								      \
-									      \
 	const struct divide *cmbp					      \
 	  = &DB_TO_UCS4_COMB[ch - __TO_UCS4_COMBINED_MIN];		      \
 	assert (cmbp->res1 != 0 && cmbp->res2 != 0);			      \
 									      \
 	put32 (outptr, cmbp->res1);					      \
 	outptr += 4;							      \
-	put32 (outptr, cmbp->res2);					      \
-	outptr += 4;							      \
+									      \
+	/* See whether we have room for the second character.  */	      \
+	if (outend - outptr >= 4)					      \
+	  {								      \
+	    put32 (outptr, cmbp->res2);					      \
+	    outptr += 4;						      \
+	  }								      \
+	else								      \
+	  {								      \
+	    /* Otherwise store only the first character now, and	      \
+	       put the second one into the queue.  */			      \
+	    curcs |= cmbp->res2 << 7;					      \
+	    inptr += 2;							      \
+	    /* Tell the caller why we terminate the loop.  */		      \
+	    result = __GCONV_FULL_OUTPUT;				      \
+	    break;							      \
+	  }								      \
       }									      \
   }
 #else
@@ -153,7 +180,20 @@ enum
 #define LOOPFCT 		FROM_LOOP
 #define BODY \
   {									      \
-    uint32_t ch = *inptr;						      \
+    uint32_t ch;							      \
+									      \
+    ch = curcs >> 7;							      \
+    if (__glibc_unlikely (ch != 0))					      \
+      {									      \
+	put32 (outptr, ch);						      \
+	outptr += 4;							      \
+	/* Remove the pending character, but preserve state bits.  */	      \
+	curcs &= (1 << 7) - 1;						      \
+	continue;							      \
+      }									      \
+									      \
+    /* Otherwise read the next input byte.  */				      \
+    ch = *inptr;							      \
 									      \
     if (__builtin_expect (ch, 0) == SO)					      \
       {									      \
