@@ -431,8 +431,9 @@ py-env := PYTHONPATH=$(py-const-dir):$(..)scripts:$${PYTHONPATH}
 # The pretty printer files and test_common_printers.py must be present for all.
 $(tests-printers-out): $(objpfx)%.out: $(objpfx)% %.py %.c $(pretty-printers) \
 		       $(..)scripts/test_printers_common.py
-	$(test-wrapper-env) $(py-env) \
-	    $(PYTHON) $*.py $*.c $(objpfx)$* $(pretty-printers) > $@; \
+	$(test-wrapper-env) $(py-env) sh -c \
+	    'command -v $(firstword $(PYTHON)) > /dev/null 2>&1 || exit 77; \
+	     exec $(PYTHON) $*.py $*.c $(objpfx)$* $(pretty-printers)' > $@; \
 	$(evaluate-test)
 endif
 
