@@ -321,6 +321,9 @@ cache_extension_load (const struct cache_file_new *cache,
 		      struct cache_extension_all_loaded *loaded)
 {
   memset (loaded, 0, sizeof (*loaded));
+  if (cache == NULL)
+    /* Old-format cache without a new-format header, so no extensions.  */
+    return true;
   if (cache->extension_offset == 0)
     /* No extensions present.  This is not a format error.  */
     return true;

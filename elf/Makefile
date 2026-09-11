@@ -306,6 +306,7 @@ tst-ifunc-resolver-protector-static-non-pie-no-pie = yes
 
 tests-container := \
   tst-dl-cache-long-path \
+  tst-dl-cache-old-format \
   tst-ldconfig-bad-aux-cache \
   tst-ldconfig-ld_so_conf-update \
   # tests-container
@@ -3043,9 +3044,10 @@ LDFLAGS-tst-dlopen-nodelete-reloc-mod17.so = -Wl,--no-as-needed
 
 $(objpfx)tst-ldconfig-ld_so_conf-update.out: $(objpfx)tst-ldconfig-ld-mod.so
 
-# Reuses the trivial module already built for tst-dl-path-buf.
 $(objpfx)tst-dl-cache-long-path: $(shared-thread-library)
+# Both cache tests reuse the trivial module already built for tst-dl-path-buf.
 $(objpfx)tst-dl-cache-long-path.out: $(objpfx)tst-dl-path-buf-mod.so
+$(objpfx)tst-dl-cache-old-format.out: $(objpfx)tst-dl-path-buf-mod.so
 
 LDFLAGS-tst-dst-needed-leaf-mod.so = \
   -Wl,-soname,\$$ORIGIN/\$$ORIGIN/\$$ORIGIN/\$$ORIGIN/\$$ORIGIN/leaf.so
